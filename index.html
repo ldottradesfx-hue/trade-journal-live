@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LA Trade Journal</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f0f;
+    --bg2: #1a1a1a;
+    --bg3: #242424;
+    --border: rgba(255,255,255,0.1);
+    --border2: rgba(255,255,255,0.18);
+    --text: #f0f0f0;
+    --text2: #999;
+    --text3: #555;
+    --green: #1D9E75;
+    --red: #E24B4A;
+    --blue: #378ADD;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .container { max-width: 560px; margin: 0 auto; }
+
+  .header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header h1 { font-size: 18px; font-weight: 500; letter-spacing: -0.3px; }
+  .header p { font-size: 12px; color: var(--text3); margin-top: 3px; }
+
+  .date-badge {
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+
+  .section { margin-bottom: 1.25rem; }
+
+  .label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 7px;
+    display: block;
+  }
+
+  .pill-group { display: flex; flex-wrap: wrap; gap: 5px; }
+
+  .pill {
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 0.5px solid var(--border);
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text2);
+    background: var(--bg2);
+    transition: all 0.1s;
+    user-select: none;
+  }
+
+  .pill:hover { border-color: var(--border2); color: var(--text); }
+  .pill.selected { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .pill.win.selected { background: var(--green); border-color: var(--green); color: #fff; }
+  .pill.loss.selected { background: var(--red); border-color: var(--red); color: #fff; }
+  .pill.be.selected { background: #555; border-color: #555; color: #fff; }
+  .pill.missed.selected { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.25rem; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+
+  .field label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .field input, .field textarea {
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    background: var(--bg2);
+    color: var(--text);
+    font-family: inherit;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.1s;
+  }
+
+  .field input:focus, .field textarea:focus { border-color: var(--border2); }
+  .field textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+
+  .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--text2);
+    cursor: pointer;
+    padding: 5px 8px;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    background: var(--bg2);
+    transition: all 0.1s;
+    user-select: none;
+  }
+
+  .check-item:hover { border-color: var(--border2); color: var(--text); }
+  .check-item.checked { border-color: rgba(255,255,255,0.3); color: var(--text); background: var(--bg3); }
+
+  .check-dot {
+    width: 13px; height: 13px;
+    border-radius: 3px;
+    border: 1.5px solid var(--border2);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.1s;
+  }
+
+  .check-item.checked .check-dot { background: var(--text); border-color: var(--text); }
+
+  .check-item.checked .check-dot::after {
+    content: '';
+    width: 5px; height: 3px;
+    border-left: 1.5px solid var(--bg);
+    border-bottom: 1.5px solid var(--bg);
+    transform: rotate(-45deg) translateY(-1px);
+    display: block;
+  }
+
+  hr { border: none; border-top: 0.5px solid var(--border); margin: 1.5rem 0; }
+
+  .missed-note { font-size: 11px; color: var(--blue); margin-top: 6px; display: none; }
+
+  .submit-btn {
+    width: 100%;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--text);
+    color: var(--bg);
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.1s;
+    letter-spacing: -0.2px;
+  }
+
+  .submit-btn:hover { opacity: 0.88; }
+  .submit-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .status {
+    font-size: 13px;
+    text-align: center;
+    margin-top: 10px;
+    min-height: 18px;
+    color: var(--text3);
+  }
+
+  .status.success { color: var(--green); }
+  .status.error { color: var(--red); }
+
+  .section-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div>
+      <h1>LA Trade Journal 📓</h1>
+      <p>Log every trade. Right after you close it.</p>
+    </div>
+    <div class="date-badge" id="date-badge"></div>
+  </div>
+
+  <div class="section-row">
+    <div class="section">
+      <span class="label">Session</span>
+      <div class="pill-group" id="session-group">
+        <div class="pill" data-val="AM SESSION" onclick="selectPill(this,'session-group')">AM (7–10am)</div>
+        <div class="pill" data-val="PM SESSION" onclick="selectPill(this,'session-group')">PM (12–3pm)</div>
+      </div>
+    </div>
+    <div class="section">
+      <span class="label">Pair</span>
+      <div class="pill-group" id="pair-group">
+        <div class="pill" data-val="GBPUSD" onclick="selectPill(this,'pair-group')">GU</div>
+        <div class="pill" data-val="EURUSD" onclick="selectPill(this,'pair-group')">EU</div>
+        <div class="pill" data-val="GU/EU" onclick="selectPill(this,'pair-group')">Both</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-row">
+    <div class="section">
+      <span class="label">Bias</span>
+      <div class="pill-group" id="bias-group">
+        <div class="pill" data-val="Long/Buy" onclick="selectPill(this,'bias-group')">Long</div>
+        <div class="pill" data-val="Short/Sell" onclick="selectPill(this,'bias-group')">Short</div>
+        <div class="pill" data-val="No Bias" onclick="selectPill(this,'bias-group')">No bias</div>
+      </div>
+    </div>
+    <div class="section">
+      <span class="label">Strategy</span>
+      <div class="pill-group" id="strategy-group">
+        <div class="pill" data-val="Reversal" onclick="selectPill(this,'strategy-group')">Reversal</div>
+        <div class="pill" data-val="Continuation" onclick="selectPill(this,'strategy-group')">Continuation</div>
+        <div class="pill" data-val="Mech" onclick="selectPill(this,'strategy-group')">Mech</div>
+        <div class="pill" data-val="Double purge" onclick="selectPill(this,'strategy-group')">Double purge</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="margin-bottom:1.25rem">
+    <span class="label">Trade grade</span>
+    <div class="pill-group" id="grade-group">
+      <div class="pill" data-val="A- class 6+ confluences" onclick="selectPill(this,'grade-group')">A class</div>
+      <div class="pill" data-val="B-class 5+ confluences" onclick="selectPill(this,'grade-group')">B class</div>
+      <div class="pill" data-val="C-class 4 or less confluences" onclick="selectPill(this,'grade-group')">C class</div>
+      <div class="pill" data-val="Emotional Trade" onclick="selectPill(this,'grade-group')">Emotional</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="section">
+    <span class="label">Result</span>
+    <div class="pill-group" id="result-group">
+      <div class="pill win" data-val="Win" onclick="selectPill(this,'result-group')">Win</div>
+      <div class="pill loss" data-val="Loss" onclick="selectPill(this,'result-group')">Loss</div>
+      <div class="pill be" data-val="Breakeven" onclick="selectPill(this,'result-group')">Breakeven</div>
+      <div class="pill missed" data-val="Missed Trade" onclick="selectPill(this,'result-group')">Missed trade</div>
+      <div class="pill" data-val="No Trade" onclick="selectPill(this,'result-group')">No trade</div>
+    </div>
+    <p class="missed-note" id="missed-note">Missed trade — log what you saw but didn't take.</p>
+  </div>
+
+  <div class="row" style="margin-top:1.25rem">
+    <div class="field">
+      <label>Risk %</label>
+      <input type="text" id="risk" placeholder="e.g. 1%" />
+    </div>
+    <div class="field">
+      <label>Actual RR</label>
+      <input type="text" id="rr" placeholder="e.g. 1:3.5" />
+    </div>
+  </div>
+
+  <div class="field" style="margin-bottom:1.25rem">
+    <label>Account % change</label>
+    <input type="text" id="pnl" placeholder="+2% for a win, -1% for a loss" />
+  </div>
+
+  <hr>
+
+  <div class="section">
+    <span class="label">Confluences met</span>
+    <div class="checkbox-grid" id="confluence-grid"></div>
+  </div>
+
+  <hr>
+
+  <div class="row">
+    <div class="field">
+      <label>Entry price</label>
+      <input type="text" id="entry" placeholder="1.27450" />
+    </div>
+    <div class="field">
+      <label>Exit price</label>
+      <input type="text" id="exit" placeholder="1.28100" />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label>Stop loss</label>
+      <input type="text" id="sl" placeholder="1.27200" />
+    </div>
+    <div class="field">
+      <label>Take profit</label>
+      <input type="text" id="tp" placeholder="1.28500" />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label>Entry time</label>
+      <input type="text" id="entry-time" placeholder="08:15" />
+    </div>
+    <div class="field">
+      <label>Exit time</label>
+      <input type="text" id="exit-time" placeholder="09:30" />
+    </div>
+  </div>
+
+  <div class="field" style="margin-bottom:1.25rem">
+    <label>TradingView link</label>
+    <input type="text" id="tv-link" placeholder="https://tradingview.com/..." />
+  </div>
+
+  <hr>
+
+  <div class="field" style="margin-bottom:1rem">
+    <label>Emotions</label>
+    <input type="text" id="emotions" placeholder="e.g. confident, hesitant, FOMO..." />
+  </div>
+
+  <div class="field" style="margin-bottom:1.5rem">
+    <label>Reflection</label>
+    <textarea id="reflection" placeholder="What happened? What would you do differently?"></textarea>
+  </div>
+
+  <button class="submit-btn" id="submit-btn" onclick="submitTrade()">Log trade →</button>
+  <p class="status" id="status"></p>
+
+</div>
+
+<script>
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzjNAyLD27FxVw5__mevI4x00hD3FRUUJSwhZ7I5wUs5STTexFVPYDD0wzmfJOEBx5nhQ/exec';
+
+  const confluences = [
+    'Sweep of Asian Liquidity','Sweep of Structural Liquidity','HTF POI Mitigated',
+    'MSS','Entry at OB Retest','Entry at FVG','EQ Entry','Unicorn Entry',
+    'Mitigation of FVG','Discount PD','Premium PD','HTF alignment',
+    'Inducement','SMT','CISD','Breaker Block','Continuation PA','OTE entry',
+    'IRL-ERL','IFVG','HTF OB','Turtle soup','Double purge','Candle closure entry',
+    'IRL-IRL','15MIN CHOCH','1 MIN CHOCH','ERL-IRL','PDL $','PDH$','SSL RAID','LTF AMD','BSL RAID$'
+  ];
+
+  const grid = document.getElementById('confluence-grid');
+  confluences.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'check-item';
+    el.innerHTML = `<div class="check-dot"></div><span>${c}</span>`;
+    el.onclick = () => el.classList.toggle('checked');
+    grid.appendChild(el);
+  });
+
+  const now = new Date();
+  document.getElementById('date-badge').textContent = now.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+
+  function selectPill(el, groupId) {
+    document.querySelectorAll(`#${groupId} .pill`).forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+    if (groupId === 'result-group') {
+      document.getElementById('missed-note').style.display =
+        el.dataset.val === 'Missed Trade' ? 'block' : 'none';
+    }
+  }
+
+  function getSelected(groupId) {
+    const el = document.querySelector(`#${groupId} .pill.selected`);
+    return el ? el.dataset.val : '';
+  }
+
+  function getCheckedConfluences() {
+    return Array.from(document.querySelectorAll('#confluence-grid .check-item.checked span'))
+      .map(s => s.textContent).join(', ');
+  }
+
+  function resetForm() {
+    ['session-group','pair-group','bias-group','strategy-group','grade-group','result-group'].forEach(g => {
+      document.querySelectorAll(`#${g} .pill`).forEach(p => p.classList.remove('selected'));
+    });
+    document.querySelectorAll('#confluence-grid .check-item').forEach(el => el.classList.remove('checked'));
+    ['entry','exit','sl','tp','risk','rr','pnl','emotions','reflection','tv-link','entry-time','exit-time'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('missed-note').style.display = 'none';
+  }
+
+  async function submitTrade() {
+    const btn = document.getElementById('submit-btn');
+    const status = document.getElementById('status');
+
+    if (!getSelected('result-group')) {
+      status.textContent = 'Select a result before logging.';
+      status.className = 'status error';
+      return;
+    }
+
+    const today = new Date().toLocaleDateString('en-GB');
+    const isMissed = getSelected('result-group') === 'Missed Trade';
+
+    const row = [
+      today,
+      getSelected('session-group'),
+      getSelected('pair-group'),
+      getSelected('bias-group'),
+      getSelected('strategy-group'),
+      getSelected('grade-group'),
+      getCheckedConfluences(),
+      document.getElementById('entry').value,
+      document.getElementById('sl').value,
+      document.getElementById('tp').value,
+      document.getElementById('exit').value,
+      document.getElementById('risk').value,
+      getSelected('result-group'),
+      document.getElementById('rr').value,
+      document.getElementById('pnl').value,
+      document.getElementById('entry-time').value,
+      document.getElementById('exit-time').value,
+      document.getElementById('emotions').value,
+      document.getElementById('reflection').value,
+      document.getElementById('tv-link').value,
+      isMissed ? 'Yes' : 'No'
+    ];
+
+    btn.disabled = true;
+    status.textContent = 'Logging...';
+    status.className = 'status';
+
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ row })
+      });
+
+      status.textContent = '✓ Trade logged';
+      status.className = 'status success';
+      setTimeout(() => {
+        resetForm();
+        status.textContent = '';
+        status.className = 'status';
+      }, 2000);
+
+    } catch(e) {
+      status.textContent = 'Failed to log. Check your connection.';
+      status.className = 'status error';
+    }
+
+    btn.disabled = false;
+  }
+</script>
+</body>
+</html>
